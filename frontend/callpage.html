@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>拨打电话</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f4;
+        }
+
+        .dialer {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .display-container {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .display {
+            width: 240px;
+            height: 50px;
+            background-color: white;
+            border: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            padding: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+
+        .backspace {
+            width: 80px;
+            height: 80px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .backspace:active {
+            background-color: #e53935;
+        }
+
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+
+        .key {
+            width: 80px;
+            height: 80px;
+            background-color: white;
+            border: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .key:active {
+            background-color: #ddd;
+        }
+
+        .call-button {
+            width: 100%;
+            max-width: 300px;
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+        }
+
+        .call-button button {
+            width: 48%;
+            height: 50px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .call-button button.clear {
+            background-color: #f44336;
+        }
+
+        .call-button button:active {
+            background-color: #45a049;
+        }
+
+        .call-button button.clear:active {
+            background-color: #e53935;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="dialer">
+        <div class="display-container">
+            <div class="display" id="display"></div>
+        </div>
+        <div class="keypad">
+            <div class="key" onclick="pressKey('1')">1</div>
+            <div class="key" onclick="pressKey('2')">2</div>
+            <div class="key" onclick="pressKey('3')">3</div>
+            <div class="key" onclick="pressKey('4')">4</div>
+            <div class="key" onclick="pressKey('5')">5</div>
+            <div class="key" onclick="pressKey('6')">6</div>
+            <div class="key" onclick="pressKey('7')">7</div>
+            <div class="key" onclick="pressKey('8')">8</div>
+            <div class="key" onclick="pressKey('9')">9</div>
+            <div class="key" style="background:none;box-shadow: none;border: none;pointer-events: none;"></div>
+            <!-- 空白键 -->
+            <div class="key" onclick="pressKey('0')">0</div>
+            <button class="backspace" onclick="backspace()">←</button>
+        </div>
+        <div class="call-button">
+            <button onclick="makeCall()">拨打</button>
+            <button class="clear" onclick="clearDisplay()">清空</button>
+        </div>
+    </div>
+
+    <script>
+        function pressKey(key) {
+            const display = document.getElementById('display');
+            display.textContent += key;
+        }
+
+        function clearDisplay() {
+            const display = document.getElementById('display');
+            display.textContent = '';
+        }
+
+        function backspace() {
+            const display = document.getElementById('display');
+            display.textContent = display.textContent.slice(0, -1);
+        }
+
+        document.addEventListener('keydown', function (event) {
+            const key = event.key;
+            if (key >= '0' && key <= '9') {
+                pressKey(key);
+            } else if (key === 'Backspace') {
+                backspace();
+            }
+        });
+
+        function makeCall() {
+            const display = document.getElementById('display');
+            const number = display.textContent;
+            
+            const message = {
+                action: 'call', 
+                data: {           // 包含拨打电话的联系人信息
+                    number: number
+                }
+            };
+
+            window.parent.postMessage(message, '*');
+        }
+    </script>
+</body>
+
+</html>

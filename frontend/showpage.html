@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>获取联系人</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+
+        .lxr-list {
+            margin-top: 20px;
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .lxr-list th,
+        .lxr-list td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        .lxr-item {
+            padding: 5px;
+            border: 1px solid #ddd;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>显示联系人</h1>
+    <div style="display: flex;">
+        <div>
+            <label>
+                <input type="radio" name="search-type" value="name" checked> 姓名
+            </label>
+            <label>
+                <input type="radio" name="search-type" value="number"> 电话号码
+            </label>
+            &nbsp;&nbsp;
+            <input type="text" id="search-input" placeholder="输入搜索内容" oninput="filterContacts()">
+        </div>
+        <div style="margin-left: auto;"></div>
+        <button onclick="addPage('add')">+添加联系人</button>
+        &nbsp;&nbsp;
+        <label for="sort-type">排序方式:</label>
+        <select id="sort-type" onchange="sortContacts()">
+            <option value="familyname">默认排序</option>
+            <option value="pinyin">按拼音排序</option>
+            <option value="count">按拨打次数排序</option>
+        </select>
+    </div>
+
+    <table class="lxr-list" id="lxr-list">
+        <thead>
+            <tr>
+                <th>姓名</th>
+                <th>电话号码</th>
+                <th>简介</th>
+                <th>拨打次数</th>
+                <th>操作</th>
+            </tr>
+        </thead>
+        <tbody id="lxr-list-body">
+        </tbody>
+    </table>
+
+    <script>
+        let contacts = [];
+
+        // 初始化联系人列表
+        window.onload = function () {
+            const sortType = document.getElementById('sort-type').value;
+            if (sortType === 'familyname') {
+                fetchContacts('http://127.0.0.1:8080/operation=list');
+            } else if (sortType === 'count') {
+                fetchContacts('http://127.0.0.1:8080/operation=countlist');
+            } else if (sortType === 'pinyin') {
+                fetchContacts('http://127.0.0.1:8080/operation=pinyinlist');
+            }
+
+            document.getElementById('sort-type').addEventListener('change', () => {
+                const newSortType = document.getElementById('sort-type').value;
+                if (newSortType === 'familyname') {
+                    fetchContacts('http://127.0.0.1:8080/operation=list');
+                } else if (newSortType === 'count') {
+                    fetchContacts('http://127.0.0.1:8080/operation=countlist');
+                } else if (newSortType === 'pinyin') {
+                    // fetchContacts('http://127.0.0.1:8080/operation=pinyinlist');
+                    contacts.sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'));
+                    displayContacts(contacts);
+                }
+            });
+        };
+
+        // 通用的获取联系人方法
+        function fetchContacts(url) {
+            fetch(url)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.text();
+                })
+                .then(text => {
+                    console.log("Response Text:", text);
+                    return JSON.parse(text);
+                })
+                .then(data => {
+                    contacts = data;
+                    displayContacts(contacts);
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        // 显示联系人列表
+        function displayContacts(contacts) {
+            const tbody = document.getElementById('lxr-list-body');
+            tbody.innerHTML = '';
+            if (contacts.length === 0) {
+                const noContactsRow = document.createElement('tr');
+                noContactsRow.innerHTML = '<td colspan="5">没有联系人</td>';
+                tbody.appendChild(noContactsRow);
+            } else {
+                contacts.forEach(contact => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${contact.name}</td>
+                        <td>${contact.number}</td>
+                        <td>${contact.jj || ''}</td>
+                        <td>${contact.count || 0}</td>
+                        <td>
+                            <button onclick="callContact('${contact.name}', '${contact.number}')">拨打</button>
+                            <button onclick="editContact('${contact.name}', '${contact.number}', '${contact.jj || ''}')">修改</button>
+                            <button onclick="deleteContact('${contact.name}')">删除</button>
+                        </td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+        }
+
+        // 显示联系人亲属
+        function showRelation(name, number) {
+
+        }
+
+        // 拨打联系人
+        function callContact(name, number) {
+            const message = {
+                action: 'call',
+                data: {           // 包含拨打电话的联系人信息
+                    name: name,
+                    number: number
+                }
+            };
+
+            window.parent.postMessage(message, '*');
+
+        }
+
+        // 删除联系人
+        function deleteContact(name) {
+            fetch(`http://127.0.0.1:8080/operation=delete`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name })
+            })
+            
+                setTimeout(() => {
+                    location.reload();
+                }, 700);
+        }
+
+        // 编辑联系人
+        function editContact(name, number, jj) {
+            const contactData = JSON.stringify({ name, number, jj });
+            localStorage.setItem('editContact', contactData);
+            changePage('change');
+        }
+
+        // 筛选联系人
+        function filterContacts() {
+            const searchType = document.querySelector('input[name="search-type"]:checked').value;
+            const searchInput = document.getElementById('search-input').value.toLowerCase();
+            const filteredContacts = contacts.filter(contact => {
+                if (searchType === 'name') {
+                    return contact.name.toLowerCase().includes(searchInput);
+                } else if (searchType === 'number') {
+                    return contact.number.toLowerCase().includes(searchInput);
+                }
+            });
+            displayContacts(filteredContacts);
+        }
+
+        // 排序联系人
+        function sortContacts() {
+            const sortType = document.getElementById('sort-type').value;
+            if (sortType === 'pinyin') {
+                contacts.sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'));
+            } else if (sortType === 'familyname') {
+                contacts.sort((a, b) => (b.name.split(' ')[0] || '').localeCompare(a.name.split(' ')[0] || ''));
+            } else if (sortType === 'count') {
+                contacts.sort((a, b) => (b.count || 0) - (a.count || 0));
+            }
+            displayContacts(contacts);
+        }
+
+        // 跳转到指定页面
+        function addPage(page) {
+            window.parent.postMessage({ action: 'loadPage', page: page }, '*');
+        }
+
+        function changePage(page) {
+            window.parent.postMessage({ action: 'loadPage', page: page }, '*');
+        }
+
+    </script>
+</body>
+
+</html>

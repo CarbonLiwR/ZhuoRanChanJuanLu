@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>添加联系人</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f4f4f4;
+        }
+
+        .form-container {
+            width: 100%;
+            max-width: 500px;
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-container input,
+        .form-container button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .form-container button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .form-container button:active {
+            background-color: #45a049;
+        }
+
+        table {
+            width: 100%;
+            margin-top: 20px;
+            border-collapse: collapse;
+        }
+
+        table,
+        th,
+        td {
+            border: 1px solid #ddd;
+        }
+
+        th,
+        td {
+            padding: 10px;
+            text-align: left;
+        }
+
+        .error {
+            border-color: red;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="form-container">
+        <h1>添加联系人</h1>
+        <span>姓名: </span><input type="text" style="width: 380px;" id="name" required><br>
+        <span>电话号码: </span><input type="text" style="width: 380px;" id="number" required><br>
+        <span>个人简介: </span><input type="text" style="width: 380px;" id="jj" required><br>
+        <table id="relation">
+            <thead>
+                <tr>
+                    <th>亲属称谓</th>
+                    <th>亲属姓名</th>
+                    <th><button type="button" onclick="addRow(this)">+</button></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><input type="text" class="relation-title" style="width: 180px;padding-bottom: none;"
+                            placeholder="亲属称谓" required></td>
+                    <td><input type="text" class="relation-name" style="width: 180px;padding-bottom: none;"
+                            placeholder="亲属姓名" required></td>
+                    <td><button type="button" onclick="removeRow(this)">-</button></td>
+                </tr>
+            </tbody>
+        </table>
+        <h6>注: 不填写亲属关系则必须删除该行</h6>
+        <button onclick="addContact()">添加联系人</button>
+    </div>
+
+    <script>
+        function addRow(button) {
+            const rows = document.querySelectorAll('#relation tbody tr');
+            let allFilled = true;
+            let titles = new Set();
+
+            rows.forEach(row => {
+                const titleInput = row.querySelector('.relation-title');
+                const nameInput = row.querySelector('.relation-name');
+                const title = titleInput.value;
+                const name = nameInput.value;
+
+                if (!title || !name) {
+                    allFilled = false;
+                }
+
+                if (titles.has(title)) {
+                    titleInput.classList.add('error');
+                    allFilled = false;
+                } else {
+                    titleInput.classList.remove('error');
+                    titles.add(title);
+                }
+            });
+
+            if (allFilled || rows.length === 0) {
+                const newRow = document.createElement('tr');
+                newRow.innerHTML = `
+                    <td><input type="text" class="relation-title" style="width: 180px;padding-bottom: none;" placeholder="亲属称谓" required></td>
+                    <td><input type="text" class="relation-name" style="width: 180px;padding-bottom: none;" placeholder="亲属姓名" required></td>
+                    <td>
+                        <button type="button" onclick="removeRow(this)">-</button>
+                    </td>
+                `;
+                document.querySelector('#relation tbody').appendChild(newRow);
+
+            } else {
+                alert('请填写完整的亲属信息并确保称谓不重复');
+            }
+        }
+
+        function removeRow(button) {
+            const row = button.parentElement.parentElement;
+            row.remove();
+        }
+
+        function addContact() {
+            const name = document.getElementById('name').value;
+            const number = document.getElementById('number').value;
+            const jj = document.getElementById('jj').value;
+
+            if (!name) {
+                alert('请填写姓名');
+                return;
+            }
+
+            if (!number) {
+                alert('请填写电话号码');
+                return;
+            }
+
+            if (!jj) {
+                alert('请填写个人简介');
+                return;
+            }
+
+            const relationRows = document.querySelectorAll('#relation tbody tr');
+            const gx = [];
+            const gxname = [];
+            let titles = new Set();
+            let allFilled = true;
+
+            relationRows.forEach(row => {
+                const titleInput = row.querySelector('.relation-title');
+                const nameInput = row.querySelector('.relation-name');
+                const title = titleInput.value;
+                const name = nameInput.value;
+
+                if (!title || !name) {
+                    allFilled = false;
+                }
+
+                if (titles.has(title)) {
+                    titleInput.classList.add('error');
+                    allFilled = false;
+                } else {
+                    titleInput.classList.remove('error');
+                    titles.add(title);
+                    if (title && name) {
+                        gx.push(title);
+                        gxname.push(name);
+                    }
+                }
+            });
+
+            if (!allFilled) {
+                alert('请填写完整的亲属信息并确保称谓不重复');
+                return;
+            }
+
+            const contact = {
+                name: name,
+                number: number,
+                jj: jj,
+                relationnumber: gx.length,
+                gx: gx,            // 存储亲属称谓
+                gxname: gxname     // 存储亲属姓名
+            };
+            console.log(contact);
+            fetch('http://127.0.0.1:8080/operation=add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json; charset=UTF-8'
+                },
+                body: JSON.stringify(contact)
+            })
+
+            setTimeout(() => {
+                showPage('show');
+            }, 1000);
+        }
+
+
+        function showPage(page) {
+            window.parent.postMessage({ action: 'loadPage', page: page }, '*');
+        }
+    </script>
+</body>
+
+</html>

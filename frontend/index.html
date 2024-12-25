@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>卓然婵娟录</title>
+    <link rel="icon" href="./logo.png">
+    <style>
+        /* 设置页面的整体布局 */
+        body {
+            display: flex;
+            height: 100vh;
+            margin: 0;
+        }
+
+        /* 左侧按钮区 */
+        nav {
+            width: 200px;
+            background-color: #f4f4f4;
+            padding: 10px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-evenly;
+        }
+
+        nav button {
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        nav button:hover {
+            background-color: #2980b9;
+        }
+
+        /* 右侧内容区 */
+        #content {
+            flex-grow: 1;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        /* 页面内容的样式 */
+        h1 {
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <img src="./logo.png" style="width: 100px; height: 100px;margin-inline:auto;margin-bottom:0px;">
+        <button onclick="loadPage('home')">主页</button>
+        <button onclick="loadPage('add')">添加联系人</button>
+        <!-- <button onclick="loadPage('change')">修改联系人</button> -->
+        <button onclick="loadPage('show')">显示联系人</button>
+        <button onclick="loadPage('call')">拨打电话</button>
+        <!-- <button onclick="loadPage('calling')">拨打ing</button> -->
+        <button onclick="loadPage('faq')">关于</button>
+    </nav>
+    
+    <div id="content" style="flex-grow: 1; display: flex; justify-content: center; align-items: center;">
+        <!-- Page content will be loaded here -->
+
+    </div>
+
+    <script>
+        // 根据点击的按钮来加载不同的页面内容
+        function loadPage(page) {
+            const content = document.getElementById('content');
+            if (page === 'home') {
+                content.innerHTML = '<div style="display:block"><img src="./logo.png" style="width: 100px; height: 100px;"><h1>欢迎使用卓然婵娟录</h1><p>Welcome to ZHUORAN CONTACTS</p><div><a href="./gamepage.html" style="color:grey;text-decoration:none;position:fixed;bottom:3px;right:3px">game</a>';
+            } else if (page === 'add') {
+                content.innerHTML ='<iframe style="width:75vw;border: none;height:95vh" src="addpage.html"></iframe>'
+            } else if (page === 'change') {
+                content.innerHTML ='<iframe style="width:75vw;border: none;height:90vh" src="changepage.html"></iframe>'
+            } else if (page === 'show') {
+                content.innerHTML = '<iframe style="width:75vw;border: none;height:90vh" src="showpage.html"></iframe>';
+            } else if (page === 'call') {
+                content.innerHTML = '<iframe style="width:75vw;border: none;height:90vh" src="callpage.html"></iframe>';
+            } else if (page === 'calling') {
+                content.innerHTML = '<iframe style="width:75vw;border: none;height:90vh" src="calling.html"></iframe>';
+            } else if (page === 'faq') {
+                content.innerHTML = '<div><img src="./logo.png" style="width: 100px; height: 100px;"><h1>卓然婵娟录</h1><br>是由<strong>余卓衍</strong>和<strong>李蔚然</strong>共同打造的<strong>智能通讯录系统</strong>，<br>提供显示联系人，筛选联系人，多种自动排序功能，一键拨打电话服务，拨号服务等</div>';
+            }
+        }
+
+        // 默认加载 home 页面
+        loadPage('home');
+        window.addEventListener('message', function(event) {
+            if (event.data.action === 'loadPage') {
+                loadPage(event.data.page);
+            } else if (event.data.action === 'call') {
+                // 处理拨打电话的逻辑
+                const { name, number } = event.data.data;
+                loadPage('calling');
+                setTimeout(() => {
+                    const iframe = document.querySelector('#content iframe');
+                    iframe.contentWindow.postMessage({ action: 'setContact', name, number }, '*');
+                }, 100);
+            }
+    });
+    </script>
+</body>
+</html>
